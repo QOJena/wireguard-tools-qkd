@@ -410,6 +410,21 @@ err:
 	return false;
 }
 
+
+// QKD Stuff
+
+static inline bool parse_kme_hostname(char *kme_hostname, const char *value)
+{
+	strcpy(kme_hostname, value);
+	return true;
+}
+
+static inline bool parse_slave_sae(char *slave_sae, const char *value)
+{
+	strcpy(slave_sae, value);
+	return true;
+}
+
 static bool process_line(struct config_ctx *ctx, const char *line)
 {
 	const char *value;
@@ -467,7 +482,15 @@ static bool process_line(struct config_ctx *ctx, const char *line)
 			ret = parse_key(ctx->last_peer->preshared_key, value);
 			if (ret)
 				ctx->last_peer->flags |= WGPEER_HAS_PRESHARED_KEY;
-		} else
+		} else if (key_match("KmeHostname")) {
+			ret = parse_kme_hostname(ctx->last_peer->kme_hostname, value);
+			if (ret)
+				ctx->last_peer->flags |= WGPEER_HAS_KME_HOSTNAME;
+		} else if (key_match("SlaveSae")) {
+			ret = parse_slave_sae(ctx->last_peer->slave_sae_id, value);
+			if (ret)
+				ctx->last_peer->flags |= WGPEER_HAS_SLAVE_SAE;
+	 	} else
 			goto error;
 	} else
 		goto error;
@@ -561,6 +584,11 @@ static char *strip_spaces(const char *in)
 	return out;
 }
 
+
+
+
+
+
 struct wgdevice *config_read_cmd(const char *argv[], int argc)
 {
 	struct wgdevice *device = calloc(1, sizeof(*device));
@@ -638,6 +666,18 @@ struct wgdevice *config_read_cmd(const char *argv[], int argc)
 			peer->flags |= WGPEER_HAS_PRESHARED_KEY;
 			argv += 2;
 			argc -= 2;
+		} else if (!strcmp(argv[0], "kme-hostname") && argc >= 2 && peer) {
+			if (!parse_kme_hostname(peer->kme_hostname, argv[1]))
+				goto error;
+			peer->flags |= WGPEER_HAS_KME_HOSTNAME;
+			argv += 2;
+			argc -= 2;
+		} else if (!strcmp(argv[0], "slave-sae") && argc >= 2 && peer) {
+			if (!parse_slave_sae(peer->slave_sae_id, argv[1]))
+				goto error;
+			peer->flags |= WGPEER_HAS_SLAVE_SAE;
+			argv += 2;
+			argc -= 2;
 		} else {
 			fprintf(stderr, "Invalid argument: %s\n", argv[0]);
 			goto error;
@@ -648,3 +688,4 @@ error:
 	free_wgdevice(device);
 	return false;
 }
+

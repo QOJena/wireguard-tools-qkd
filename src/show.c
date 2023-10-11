@@ -236,6 +236,10 @@ static void pretty_print(struct wgdevice *device)
 				terminal_printf("%s" TERMINAL_FG_CYAN "/" TERMINAL_RESET "%u%s", ip(allowedip), allowedip->cidr, allowedip->next_allowedip ? ", " : "\n");
 		} else
 			terminal_printf("(none)\n");
+		if (peer->flags & WGPEER_HAS_KME_HOSTNAME)
+			terminal_printf("  " TERMINAL_BOLD "kme hostname" TERMINAL_RESET ": %s\n", peer->kme_hostname);
+		if (peer->flags & WGPEER_HAS_SLAVE_SAE)
+			terminal_printf("  " TERMINAL_BOLD "slave SAE id" TERMINAL_RESET ": %s\n", peer->slave_sae_id);
 		if (peer->last_handshake_time.tv_sec)
 			terminal_printf("  " TERMINAL_BOLD "latest handshake" TERMINAL_RESET ": %s\n", ago(&peer->last_handshake_time));
 		if (peer->rx_bytes || peer->tx_bytes) {

@@ -43,7 +43,9 @@ enum {
 	WGPEER_REPLACE_ALLOWEDIPS = 1U << 1,
 	WGPEER_HAS_PUBLIC_KEY = 1U << 2,
 	WGPEER_HAS_PRESHARED_KEY = 1U << 3,
-	WGPEER_HAS_PERSISTENT_KEEPALIVE_INTERVAL = 1U << 4
+	WGPEER_HAS_PERSISTENT_KEEPALIVE_INTERVAL = 1U << 4,
+	WGPEER_HAS_KME_HOSTNAME = 1U << 5,
+	WGPEER_HAS_SLAVE_SAE = 1U << 6,
 };
 
 struct wgpeer {
@@ -64,6 +66,10 @@ struct wgpeer {
 
 	struct wgallowedip *first_allowedip, *last_allowedip;
 	struct wgpeer *next_peer;
+
+	// QKD stuff
+	char kme_hostname[128];
+	char slave_sae_id[128];
 };
 
 enum {
@@ -85,6 +91,7 @@ struct wgdevice {
 
 	uint32_t fwmark;
 	uint16_t listen_port;
+	
 
 	struct wgpeer *first_peer, *last_peer;
 };

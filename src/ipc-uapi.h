@@ -51,6 +51,7 @@ static int userspace_set_device(struct wgdevice *dev)
 		fprintf(f, "fwmark=%u\n", dev->fwmark);
 	if (dev->flags & WGDEVICE_REPLACE_PEERS)
 		fprintf(f, "replace_peers=true\n");
+	
 
 	for_each_wgpeer(dev, peer) {
 		key_to_hex(hex, peer->public_key);
@@ -91,6 +92,10 @@ static int userspace_set_device(struct wgdevice *dev)
 				continue;
 			fprintf(f, "allowed_ip=%s/%d\n", ip, allowedip->cidr);
 		}
+		if (peer->flags & WGPEER_HAS_KME_HOSTNAME)
+			fprintf(f, "kme_hostname=%s\n", peer->kme_hostname);
+		if (peer->flags & WGPEER_HAS_SLAVE_SAE)
+			fprintf(f, "slave_sae_id=%s\n", peer->slave_sae_id);
 	}
 	fprintf(f, "\n");
 	fflush(f);
@@ -279,7 +284,15 @@ static int userspace_get_device(struct wgdevice **out, const char *iface)
 			peer->rx_bytes = NUM(0xffffffffffffffffULL);
 		else if (peer && !strcmp(key, "tx_bytes"))
 			peer->tx_bytes = NUM(0xffffffffffffffffULL);
-		else if (!strcmp(key, "errno"))
+		else if (peer && !strcmp(key, "kme_hostname")) {
+			strcpy(peer->kme_hostname, value);
+			peer->flags |= WGPEER_HAS_KME_HOSTNAME;
+
+		} else if (peer && !strcmp(key, "slave_sae_id")) {
+			strcpy(peer->slave_sae_id, value);
+			peer->flags |= WGPEER_HAS_SLAVE_SAE;
+
+		} else if (!strcmp(key, "errno"))
 			ret = -NUM(0x7fffffffU);
 	}
 	ret = -EPROTO;
